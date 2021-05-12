@@ -1,30 +1,54 @@
 import cv2,random,os,natsort,torch
 import numpy as np
+from skimage import draw
 
 from pytorch_yolov5.utils.utils import scale_coords,plot_one_box
 
-
-def detect_post_processing(np_img,pred,class_names,inference_shape,class_colors=None,area_restrict=None):
-    if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-        rail = cv2.imread(area_restrict)
-        size_K=rail.shape[0]/np_img.shape[0]
-        rail = cv2.cvtColor(rail, cv2.COLOR_BGR2GRAY)
-        _, rail = cv2.threshold(rail, 150, 255, cv2.THRESH_BINARY)
-        Area_list = np.argwhere(rail > 250).tolist()
-
+class Area_Restrict:
+    def __init__(self,area_restrict,origin_shape) -> None:
+        super().__init__()
+        self.area_restrict=(area_restrict is not None) and (os.path.isfile(area_restrict))
+        if self.area_restrict:
+            self.area_path=area_restrict
+            area_img = cv2.imread(self.area_path)
+            same_size_mask = cv2.resize(area_img, (origin_shape[1], origin_shape[0]))
+            _, mask = cv2.threshold(cv2.cvtColor(same_size_mask, cv2.COLOR_BGR2GRAY), 200, 255, cv2.THRESH_BINARY)
+            self.mask_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            
+            self.size_trans=area_img.shape[0]/origin_shape[0]
+            
+            area_img = cv2.cvtColor(area_img, cv2.COLOR_BGR2GRAY)
+            _, area_img = cv2.threshold(area_img, 150, 255, cv2.THRESH_BINARY)
+            self.area_coords_list = np.argwhere(area_img > 250).tolist()
+            
+    def box_in_area(self,box):
+        if self.area_restrict:
+            right_shift=0.5
+            down_shift=0.8
+            center=[int(self.size_trans*((1-down_shift)*box[1]+down_shift*box[3])),int(self.size_trans*((1-right_shift)*box[0]+right_shift*box[2]))]
+            return center in self.area_coords_list
+        else:
+            return True
+    
+    def draw_bounding(self,img):
+        if self.area_restrict:
+            temp = cv2.drawContours(img, self.mask_contours, -1, (10, 10, 250), max(3,round(0.003 * (img.shape[0] + img.shape[1]) / 2)))
+            return temp
+        else:
+            return img
+        
+def detect_post_processing(np_img,pred,class_names,inference_shape,cameArea,class_colors=None):
     colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
     if pred is not None and len(pred):
         pred[:, :4] = scale_coords(inference_shape[2:], pred[:, :4], np_img.shape).round()
         for *xyxy, conf, cls in pred:
-            if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-                center=[int(size_K*(0.2*xyxy[1]+0.8*xyxy[3])),int(size_K*(0.5*xyxy[0]+0.5*xyxy[2]))]
-                if center not in Area_list:
-                    continue
-            label = '%s,%.2f' % (class_names[int(cls)],conf)
-            plot_one_box(xyxy, np_img, label=label, color=colors[int(cls)]) 
+            if cameArea.area_restrict and (not cameArea.box_in_area(xyxy)):
+                continue
+            text_info = '%s,%.2f' % (class_names[int(cls)],conf)
+            plot_one_box(xyxy, np_img, text_info=text_info, color=colors[int(cls)]) 
 
-    if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-        np_img=draw_bounding(np_img,area_restrict)
+    if cameArea.area_restrict:
+        cameArea.draw_bounding(np_img)
     return np_img
 
 def bbox_rel(image_width, image_height,  *xyxy):
@@ -56,14 +80,7 @@ def deepsort_update(Tracker,pred,inference_shape,np_img):
     outputs = Tracker.update(xywhs, confss , labels, np_img)
     return outputs
 
-def track_post_processing(np_img,pred,class_names,inference_shape,Tracker,class_colors=None,area_restrict=None):
-    if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-        rail = cv2.imread(area_restrict)
-        size_K=rail.shape[0]/np_img.shape[0]
-        rail = cv2.cvtColor(rail, cv2.COLOR_BGR2GRAY)
-        _, rail = cv2.threshold(rail, 150, 255, cv2.THRESH_BINARY)
-        Area_list = np.argwhere(rail > 250).tolist()
-
+def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Tracker,class_colors=None):
     colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
     if pred is not None and len(pred):
         outputs=deepsort_update(Tracker,pred,inference_shape,np_img)
@@ -75,25 +92,72 @@ def track_post_processing(np_img,pred,class_names,inference_shape,Tracker,class_
                 box=bbox_xyxy[i]
                 trackid=identities[i]
                 label=labels[i]
-                if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-                    center=[int(size_K*(0.2*box[1]+0.8*box[3])),int(size_K*(0.5*box[0]+0.5*box[2]))]
-                    if center not in Area_list:
-                        continue
+                if cameArea.area_restrict and (not cameArea.box_in_area(box)):
+                    continue
                 text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
                 plot_one_box(box, np_img, text_info=text_info, color=colors[int(label)]) 
 
-    if (area_restrict is not None) and (os.path.isfile(area_restrict)):
-        np_img=draw_bounding(np_img,area_restrict)
+    if cameArea.area_restrict:
+        cameArea.draw_bounding(np_img)
     return np_img
 
-def draw_bounding(img,quyu_path):
-    quyu = cv2.imread(quyu_path)
-    quyu = cv2.resize(quyu, (img.shape[1], img.shape[0]))
-    _, th = cv2.threshold(cv2.cvtColor(quyu.copy(), cv2.COLOR_BGR2GRAY), 200, 255, cv2.THRESH_BINARY)
-    contours, _ = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    temp=img.copy()
-    temp = cv2.drawContours(temp, contours, -1, (10, 10, 250), max(3,round(0.003 * (img.shape[0] + img.shape[1]) / 2)))
-    return temp
+def dense_post_processing(np_img,pred,class_names,inference_shape,cameArea,class_colors=None):
+    colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
+    if pred is not None and len(pred):
+        pred[:, :4] = scale_coords(inference_shape[2:], pred[:, :4], np_img.shape).round()
+        for *xyxy, conf, cls in pred:
+            if cameArea.area_restrict and (not cameArea.box_in_area(xyxy)):
+                continue
+            text_info = '%s,%.2f' % (class_names[int(cls)],conf)
+            plot_one_box(xyxy, np_img, text_info=text_info, color=colors[int(cls)]) 
+    np_img=draw_obj_dense(np_img,pred[:, :4])
+    if cameArea.area_restrict:
+        cameArea.draw_bounding(np_img)
+    return np_img
+
+def draw_obj_dense(img,box_list,k_size=281,beta=1.5):
+    value=np.ones((img.shape[0],img.shape[1])).astype('uint8')
+    value=value*10
+    value=fill_box(box_list,value)
+    value=cv2.GaussianBlur(value, ksize=(k_size,k_size),sigmaX=0,sigmaY=0)
+    color=value_to_color(value)
+    color=cv2.cvtColor(color,cv2.COLOR_RGB2BGR)
+    value[value<=20]=0.9
+    value[value>20]=1.0
+    mask=np.ones_like(img)
+    mask[:,:,0]=value
+    mask[:,:,1]=value
+    mask[:,:,2]=value
+    mask_color=mask*color
+    mask_color=cv2.GaussianBlur(mask_color, ksize=(7,7),sigmaX=0,sigmaY=0)
+    result = cv2.addWeighted(img, 1, mask_color, beta, 0)
+    info='Total number: {}'.format(len(box_list))
+    W_size,H_size=cv2.getTextSize(info, cv2.FONT_HERSHEY_TRIPLEX, 0.8 , 2)[0]
+    cv2.putText(result, info, (3, 1+H_size+9), cv2.FONT_HERSHEY_TRIPLEX, 0.8, [0,255,0], 2)
+    return result
+
+def between(x,x_min,x_max):
+    return min(x_max,max(x,x_min))
+
+def fill_box(box_list,mask,fill_size=25):
+    for box in box_list:
+        cenXY=[(box[0]+box[2])/2,(box[1]+box[3])/2]
+        cenXY=[between(cenXY[0],0+fill_size,mask.shape[1]-fill_size),between(cenXY[1],0+fill_size,mask.shape[0]-fill_size)]
+        Y=np.array([cenXY[1]-fill_size,cenXY[1]-fill_size,cenXY[1]+fill_size,cenXY[1]+fill_size])
+        X=np.array([cenXY[0]-fill_size,cenXY[0]+fill_size,cenXY[0]+fill_size,cenXY[0]-fill_size])
+        yy, xx=draw.polygon(Y,X)
+        mask[yy, xx] = 255
+    return mask
+
+def value_to_color(grayimg,low_value=15,high_value=220,low_color=[10,10,10],high_color=[255,10,10]):
+    r=low_color[0]+((grayimg-low_value)/(high_value-low_value))*(high_color[0]-low_color[0])
+    g=low_color[1]+((grayimg-low_value)/(high_value-low_value))*(high_color[1]-low_color[1])
+    b=low_color[2]+((grayimg-low_value)/(high_value-low_value))*(high_color[2]-low_color[2])
+    rgb=np.ones((grayimg.shape[0],grayimg.shape[1],3))
+    rgb[:,:,0]=r
+    rgb[:,:,1]=g
+    rgb[:,:,2]=b
+    return rgb.astype('uint8')
 
 def merge_video(img_path):
     filelist = natsort.natsorted(os.listdir(img_path))
