@@ -1,4 +1,9 @@
+
+
+
+
 ## Multi Task Integration
+
 A multi task integration based on Yolov5+Deepsort, contains:
 
 - [x] detect task
@@ -8,29 +13,13 @@ A multi task integration based on Yolov5+Deepsort, contains:
 
 ## Demo
 
-dense estimate demo and boject couning demo are shown:
+dense estimate demo: 
 
-<center>
-<img src = "demo/dense.gif"  height = "250"  width = "420" align = left><img src = "demo/counter.gif"   height = '250' width = "420" align = right>
-</center>
+<img src = "demo/dense.gif"  height = "410"  width = "700" align = left>
 
+object counting demo: 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<img src = "demo/counter.gif"   height = '410' width = "700" align = left>
 
 ## Installation
 
