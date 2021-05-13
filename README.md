@@ -15,11 +15,13 @@ A multi task integration based on Yolov5+Deepsort, contains:
 
 dense estimate demo: 
 
-<img src = "demo/dense.gif"  height = "410"  width = "700" align = left>
+![](../../paper/Typora/Typora_img/dense-1620889406768.gif)
 
 object counting demo: 
 
-<img src = "demo/counter.gif"   height = '410' width = "700" align = left>
+![](../../paper/Typora/Typora_img/counter.gif)
+
+
 
 ## Installation
 
