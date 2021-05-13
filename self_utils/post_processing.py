@@ -4,6 +4,74 @@ from skimage import draw
 
 from pytorch_yolov5.utils.utils import scale_coords,plot_one_box
 
+class Object_Counter:
+    def __init__(self,name_list) -> None:
+        super().__init__()
+        self.name_list=name_list
+        self.last_id={"P":[],
+                      "N":[]}
+        self.counter_data={"P":{key:0 for key in name_list},
+                           "N":{key:0 for key in name_list}}
+        
+    def counter_update(self,name,ID,velocity,positive_direction,negetive_direction):
+        cosin=np.dot(velocity,positive_direction)/(np.sqrt(np.dot(positive_direction,positive_direction))*np.sqrt(np.dot(velocity,velocity)))
+        if cosin >= 0.6 and name in self.name_list and ID not in self.last_id["P"]:
+            self.counter_data["P"][name]+=1
+            self.last_id["P"].append(ID)
+        else:
+            cosin=np.dot(velocity,negetive_direction)/(np.sqrt(np.dot(negetive_direction,negetive_direction))*np.sqrt(np.dot(velocity,velocity)))
+            if cosin >= 0.6 and name in self.name_list and ID not in self.last_id["N"]:
+                self.counter_data["N"][name]+=1
+                self.last_id["N"].append(ID)
+                
+    def draw_counter(self,img,color=[100,250,100],thickness=None,fontsize=None):
+        thickness = max(2,round(0.0016 * (img.shape[0] + img.shape[1]) / 2)) if thickness==None else thickness
+        fontsize = 0.36*thickness if fontsize==None else fontsize
+        top=(5,5)
+        text_info="     "
+        placeholder="                 "
+        for name in self.name_list:
+            text_info+=" {} ".format(name)
+        t_size=cv2.getTextSize(text_info, cv2.FONT_HERSHEY_TRIPLEX, fontsize , thickness+2)[0]
+        cv2.putText(img, text_info, (top[0], top[1]+t_size[1]+2), cv2.FONT_HERSHEY_TRIPLEX, fontsize, color, thickness)
+        top=(top[0],top[1]+t_size[1]+10)
+        for direction in self.counter_data.keys():
+            text_info="{}    ".format(direction)
+            for name in self.name_list:
+                length=int(len(name)/2)+1
+                text_info+=placeholder[0:length]+"{}".format(self.counter_data[direction][name])+placeholder[0:length]
+            t_size=cv2.getTextSize(text_info, cv2.FONT_HERSHEY_TRIPLEX, fontsize , thickness+2)[0]
+            cv2.putText(img, text_info, (top[0], top[1]+t_size[1]+2), cv2.FONT_HERSHEY_TRIPLEX, fontsize, color, thickness)
+            top=(top[0],top[1]+t_size[1]+10)
+        return img
+                    
+class Count_Line:
+    def __init__(self,start_point,end_point) -> None:
+        super().__init__()
+        self.start_point=start_point
+        self.end_point=end_point
+        unit_vector=np.array(self.end_point)-np.array(self.start_point)
+        unit_vector=unit_vector/np.sqrt(np.dot(unit_vector,unit_vector))
+        self.positive_direction=np.array([0-unit_vector[1],unit_vector[0]])
+        self.negetive_direction=np.array([unit_vector[1],0-unit_vector[0]])
+        
+    def box_on_line(self,box):
+        right_shift=0.5
+        down_shift=0.5
+        center=[int((1-down_shift)*box[1]+down_shift*box[3]),int((1-right_shift)*box[0]+right_shift*box[2])]
+        n=np.array(center)-np.array(self.start_point)
+        v=np.array(self.end_point)-np.array(center)
+        consin=np.dot(n,v)/(np.sqrt(np.dot(n,n))*np.sqrt(np.dot(v,v)))
+        return consin >= 0.999
+    
+    def draw_line(self,img,onTarget):
+        thickness=max(4,round(0.004 * (img.shape[0] + img.shape[1]) / 2))
+        if onTarget:
+            cv2.line(img,(self.start_point[1],self.start_point[0]),(self.end_point[1],self.end_point[0]), (0,200,0),thickness+2, 8)
+        else:
+            cv2.line(img,(self.start_point[1],self.start_point[0]),(self.end_point[1],self.end_point[0]), (0,0,200),thickness, 8)
+        return img
+        
 class Area_Restrict:
     def __init__(self,area_restrict,origin_shape) -> None:
         super().__init__()
@@ -113,6 +181,32 @@ def dense_post_processing(np_img,pred,class_names,inference_shape,cameArea,class
     np_img=draw_obj_dense(np_img,pred[:, :4])
     if cameArea.area_restrict:
         cameArea.draw_bounding(np_img)
+    return np_img
+
+def count_post_processing(np_img,pred,class_names,inference_shape,theLine,Tracker,Obj_Counter,class_colors=None):
+    colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
+    onTarget=False
+    if pred is not None and len(pred):
+        outputs=deepsort_update(Tracker,pred,inference_shape,np_img)
+        if len(outputs) > 0:
+            bbox_xyxy = outputs[:, :4]
+            labels = outputs[:, 4]
+            identities = outputs[:, 5]
+            Vx = outputs[:, 6]/10
+            Vy = outputs[:, 7]/10
+            for i in range(len(outputs)):
+                box=bbox_xyxy[i]
+                trackid=identities[i]
+                label=labels[i]
+                velocity=[0-Vy[i],Vx[i]]
+                if theLine.box_on_line(box):
+                    onTarget=True
+                    Obj_Counter.counter_update(class_names[int(label)],trackid,velocity,theLine.positive_direction,theLine.negetive_direction)
+                text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
+                plot_one_box(box, np_img, text_info=text_info, color=colors[int(label)]) 
+
+    np_img=theLine.draw_line(np_img,onTarget)
+    np_img=Obj_Counter.draw_counter(np_img)
     return np_img
 
 def draw_obj_dense(img,box_list,k_size=281,beta=1.5):

@@ -27,6 +27,7 @@ class Image_Capture:
         else:
             self.source_type="video"
         self.index=0
+        self.ret=True
 
         if self.source_type == "imgs":
             if (source.endswith(".jpg") or source.endswith(".png")):
@@ -44,13 +45,16 @@ class Image_Capture:
             img=cv2.imread(os.path.join(self.source,self.img_List[self.index]))
             ret = True if hasattr(img, 'shape') else False
             self.index+=1
+            self.ret=ret
             return ret,img,self.img_List[self.index-1]
         elif self.source_type == "camera":
             ret,img=self.cap.read()
             self.index+=1
+            self.ret=ret
             return ret,img,"frame_{}.jpg".format(self.index)
         else:
             ret,img=self.cap.read()
+            self.ret=ret
             return ret,img,"frame_{}.jpg".format(int(self.cap.get(1)))
             
     def get(self,i=0):
@@ -84,9 +88,9 @@ class Image_Capture:
     
     def ifcontinue(self):
         if self.source_type == "imgs":
-            return self.index < len(self.img_List)
+            return (self.index < len(self.img_List)) and self.ret
         else:
-            return self.cap.get(1) < self.cap.get(7) or self.cap.get(7) <= 0
+            return (self.cap.get(1) < self.cap.get(7) or self.cap.get(7) <= 0) and self.ret
 
     def release(self):
         if self.source_type == "imgs":

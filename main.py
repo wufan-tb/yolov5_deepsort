@@ -3,9 +3,9 @@ import numpy as np
 from datetime import datetime
 from multiprocessing import Pool
 
-from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing
+from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing
 from self_utils.pre_processing import Image_Capture
-from self_utils.post_processing import merge_video,Area_Restrict
+from self_utils.post_processing import merge_video,Area_Restrict,Count_Line,Object_Counter
 
 sys.path.append('pytorch_yolov5/')
 from deep_sort.configs.parser import get_config
@@ -38,7 +38,7 @@ def main(yolo5_config):
         print("=> using single process")
         
     # * init deepsort tracker
-    if yolo5_config.task not in ['empty','detect','dense']:
+    if yolo5_config.task in ['track','count']:
         cfg = get_config()
         cfg.merge_from_file("deep_sort/configs/deep_sort.yaml")
         deepsort_tracker = DeepSort(cfg.DEEPSORT.REID_CKPT, max_dist=cfg.DEEPSORT.MAX_DIST, 
@@ -48,7 +48,12 @@ def main(yolo5_config):
 
     # * load image and process
     mycap=Image_Capture(yolo5_config.input)
-    cameArea=Area_Restrict(yolo5_config.area,[mycap.get_height(),mycap.get_width()])
+    if yolo5_config.task=='count':
+        theLine=Count_Line([600,50],[600,1700])
+        class_list=yolo5_config.classes if yolo5_config.classes is not None else [0,1,2,3]
+        Obj_Counter=Object_Counter([class_names[key] for key in class_list])
+    else:
+        cameArea=Area_Restrict(yolo5_config.area,[mycap.get_height(),mycap.get_width()])
     total_num=mycap.get_length()
     while mycap.ifcontinue():
         ret,img,img_name = mycap.read()
@@ -70,8 +75,11 @@ def main(yolo5_config):
                     Tracking_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,deepsort_tracker,class_colors)
                 if yolo5_config.task=='dense':
                     Denseing_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
+                if yolo5_config.task=='count':
+                    Counting_Processing(img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
         sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))    
         sys.stdout.flush()
+
     if yolo5_config.pools > 1:
         myP.close()
         myP.join()
@@ -91,7 +99,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count'], default='detect')
     
-    parser.add_argument('--input', type=str, default="inference/yongdu.mp4", help='test imgs folder or video or camera')
+    parser.add_argument('--input', type=str, default="inference/counter.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')
     parser.add_argument('--area', type=str, default=None, help='area restrict path')
     parser.add_argument('--pools',type=int, default=1, help='max pool num')
@@ -105,6 +113,6 @@ if __name__=="__main__":
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     
     yolo5_config = parser.parse_args()
-    print(yolo5_config.area==None)
+    print(yolo5_config.classes)
     main(yolo5_config)
 
