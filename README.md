@@ -1,7 +1,6 @@
 
 
 
-
 ## Multi Task Integration
 
 A multi task integration based on Yolov5+Deepsort, contains:
@@ -13,11 +12,12 @@ A multi task integration based on Yolov5+Deepsort, contains:
 
 ## Demo
 
-dense estimate demo: 
+dense estimate demo:  
 
 ![](../../paper/Typora/Typora_img/dense-1620889406768.gif)
 
-object counting demo: 
+
+object counting demo:   
 
 ![](../../paper/Typora/Typora_img/counter.gif)
 
