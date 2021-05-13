@@ -928,7 +928,7 @@ def butter_lowpass_filtfilt(data, cutoff=1500, fs=50000, order=5):
     return filtfilt(b, a, data)  # forward-backward filter
 
 
-def plot_one_box(x, img, color=[100,100,100], text_info="None", thickness=None,fontsize=None,fontthickness=None):
+def plot_one_box(x, img, color=[100,100,100], text_info="None",velocity=None,thickness=None,fontsize=None,fontthickness=None):
     # Plots one bounding box on image img
     thickness = max(3,round(0.0025 * (img.shape[0] + img.shape[1]) / 2)) if thickness==None else thickness
     fontsize = 0.18*thickness if fontsize==None else fontsize
@@ -939,6 +939,11 @@ def plot_one_box(x, img, color=[100,100,100], text_info="None", thickness=None,f
     t_size=cv2.getTextSize(text_info, cv2.FONT_HERSHEY_TRIPLEX, fontsize , fontthickness+2)[0]
     cv2.rectangle(img, c1, (c1[0] + int(t_size[0]), c1[1] + int(t_size[1]*1.4)), color, -1)
     cv2.putText(img, text_info, (c1[0], c1[1]+t_size[1]+2), cv2.FONT_HERSHEY_TRIPLEX, fontsize, [255,255,255], fontthickness)
+    if velocity is not None:
+        center=(int((x[0]+x[2])/2),int((x[1]+x[3])/2))
+        pointat=(center[0]+int(velocity[0]),center[1]+int(velocity[1]))
+        img=cv2.arrowedLine(img,center, pointat, (0,0,240),2,0,0,0.33)
+        img=cv2.circle(img, center, 3, (0,240,0), 4)
     return img
 
 def plot_wh_methods():  # from utils.utils import *; plot_wh_methods()

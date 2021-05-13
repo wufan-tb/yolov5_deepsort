@@ -156,14 +156,17 @@ def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Track
             bbox_xyxy = outputs[:, :4]
             labels = outputs[:, 4]
             identities = outputs[:, 5]
+            Vx = outputs[:, 6]
+            Vy = outputs[:, 7]
             for i in range(len(outputs)):
                 box=bbox_xyxy[i]
                 trackid=identities[i]
                 label=labels[i]
+                velocity=[Vx[i],Vy[i]]
                 if cameArea.area_restrict and (not cameArea.box_in_area(box)):
                     continue
                 text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
-                plot_one_box(box, np_img, text_info=text_info, color=colors[int(label)]) 
+                plot_one_box(box, np_img, text_info=text_info,velocity=velocity, color=colors[int(label)]) 
 
     if cameArea.area_restrict:
         cameArea.draw_bounding(np_img)
@@ -192,8 +195,8 @@ def count_post_processing(np_img,pred,class_names,inference_shape,theLine,Tracke
             bbox_xyxy = outputs[:, :4]
             labels = outputs[:, 4]
             identities = outputs[:, 5]
-            Vx = outputs[:, 6]/10
-            Vy = outputs[:, 7]/10
+            Vx = outputs[:, 6]
+            Vy = outputs[:, 7]
             for i in range(len(outputs)):
                 box=bbox_xyxy[i]
                 trackid=identities[i]
