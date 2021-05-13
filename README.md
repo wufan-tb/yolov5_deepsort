@@ -10,8 +10,8 @@ A multi task integration based on Yolov5+Deepsort, contains:
 
 dense estimate demo and boject couning demo are shown:
 
-<center>
-<img src = "demo/dense.gif"  height = "300"  width = "500" align = left><img src = "demo/counter.gif"   height = '300' width = "500" align = right></center>
+<div>
+<img src = "demo/dense.gif"  height = "280"  width = "480" align = left><img src = "demo/counter.gif"   height = '280' width = "480" align = right></div>
 
 
 
