@@ -99,7 +99,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count'], default='detect')
     
-    parser.add_argument('--input', type=str, default="inference/counter.mp4", help='test imgs folder or video or camera')
+    parser.add_argument('--input', type=str, default="inference/yongdu.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')
     parser.add_argument('--area', type=str, default=None, help='area restrict path')
     parser.add_argument('--pools',type=int, default=1, help='max pool num')
