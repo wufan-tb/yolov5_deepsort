@@ -8,9 +8,25 @@ A multi task integration based on Yolov5+Deepsort, contains:
 
 ## Demo
 
-dense estimate demo:                      object counting demo:
+dense estimate demo:                                       object counting demo:
 
-<img src="demo/dense.gif" style="zoom: 50%;" />   <img src="demo/counter.gif" style="zoom: 50%;" />
+<center class = "half">
+<img src = "demo/dense.gif" style="zoom: 70%"  width = “50%” align = left> <img src = "demo/counter.gif"  style="zoom: 70%" width = “50%” align = right>
+</center>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Installation
 
