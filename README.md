@@ -16,11 +16,13 @@ dense estimate demo:
 
 ![](demo/dense.gif)
 
-
 object counting demo:   
 
 ![](demo/counter.gif)
 
+tracking demo(with velocity visulization):   
+
+![](demo/track.gif)
 
 
 ## Installation
