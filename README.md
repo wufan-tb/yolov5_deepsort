@@ -1,7 +1,7 @@
 
 
 
-## Detect, Track, Dense and Count Tasks in one Frame-Work
+## Multi Tasks(Detect, Track, Dense, Count) in One Frame-Work
 
 A multi task frame-work based on Yolov5+Deepsort, contains:
 
