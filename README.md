@@ -8,7 +8,7 @@ A multi task frame-work based on Yolov5+Deepsort, contains:
 - [x] **detect task**
 - [x] **track task**
 - [x] **dense estimate task**
-- [x] **boject counting task**
+- [x] **object counting task**
 
 ## Demo
 
