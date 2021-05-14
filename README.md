@@ -39,7 +39,7 @@ A multi task frame-work based on Yolov5+Deepsort, contains:
 **1.clone this repository**
 
 ```
-git clone 
+git clone https://github.com/wufan-tb/yolov5_deepsort.git
 cd yolov5_deepsort
 ```
 
