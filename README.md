@@ -24,6 +24,15 @@ A multi task frame-work based on Yolov5+Deepsort, contains:
 
 ![](demo/track.gif)
 
+## Requiments
+
+ ![](https://img.shields.io/badge/torch-1.6.0-green)
+
+ ![](https://img.shields.io/badge/torchvision-0.7.0-green)
+
+ ![](https://img.shields.io/badge/natsort-7.1.0-green)
+
+ ![](https://img.shields.io/badge/opencv_python-4.1.1.26-green)
 
 ## Installation
 
