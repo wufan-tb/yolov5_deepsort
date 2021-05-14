@@ -69,6 +69,6 @@ python main.py --task detect --input {path to imgs or video or camera} --output 
 
 more detail parameters can seen in main.py
 
-## Tanks
+## References
 
 Thanks for repositories I refered, which are [[yolov5](https://github.com/ultralytics/yolov5)] and [[deepsort](https://github.com/ZQPei/deep_sort_pytorch)].
