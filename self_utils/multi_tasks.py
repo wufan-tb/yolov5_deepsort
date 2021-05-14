@@ -1,7 +1,6 @@
 import cv2
 
-from . pre_processing import img_preprocessing
-from . yolov5_inference import yolov5_prediction
+from . inference import yolov5_prediction,img_preprocessing
 from . post_processing import detect_post_processing,track_post_processing,dense_post_processing,count_post_processing
 
 

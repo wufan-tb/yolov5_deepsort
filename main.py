@@ -4,8 +4,7 @@ from datetime import datetime
 from multiprocessing import Pool
 
 from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing
-from self_utils.pre_processing import Image_Capture
-from self_utils.post_processing import merge_video,Area_Restrict,Count_Line,Object_Counter
+from self_utils.overall_method import merge_video,Area_Restrict,Count_Line,Object_Counter,Image_Capture
 
 sys.path.append('pytorch_yolov5/')
 from deep_sort.configs.parser import get_config
