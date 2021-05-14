@@ -52,7 +52,7 @@ cd ../../
 cd deepsort/deepsort/deep/checkpoint
 ```
 
-download weights file(ckpt.t7) from [deepsort ckpt](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6) (at the bottom) to this folder.
+download weights file(ckpt.t7) from [deepsort ckpt](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6) to this folder.
 
 ```
 cd ../../../../
