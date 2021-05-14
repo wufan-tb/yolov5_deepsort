@@ -24,7 +24,7 @@ A multi task frame-work based on Yolov5+Deepsort, contains:
 
 ![](demo/track.gif)
 
-## Requiments
+## Requirements
 
  ![](https://img.shields.io/badge/torch-1.6.0-green)
 
