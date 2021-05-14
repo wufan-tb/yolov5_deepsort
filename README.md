@@ -61,7 +61,7 @@ cd ../../../../
 ## Usage
 
 ```
-python main.py --task detect --input {path to imgs or video or camera} --output {result save folder}
+python main.py --task detect --input {path to images or video or camera} --output {path to result save folder}
                       track
                       dense
                       count
@@ -71,4 +71,4 @@ more detail parameters can seen in main.py
 
 ## References
 
-Thanks for repositories I refered, which are [[yolov5](https://github.com/ultralytics/yolov5)] and [[deepsort](https://github.com/ZQPei/deep_sort_pytorch)].
+Thanks for the great work from [[yolov5](https://github.com/ultralytics/yolov5)] and [[deepsort](https://github.com/ZQPei/deep_sort_pytorch)].
