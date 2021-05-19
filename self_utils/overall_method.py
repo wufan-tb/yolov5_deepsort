@@ -1,6 +1,80 @@
 import cv2,os,natsort
 import numpy as np
 
+class Vector_Memory:
+    def __init__(self,min_cosin=0.8,init_num=50,lawful_threshold=0.2) -> None:
+        super().__init__()
+        self.mean_Vector=[]
+        self.mean_Length=[]
+        self.Num=[]
+        self.min_cosin=min_cosin
+        self.flag="init"
+        self.init_num=init_num
+        self.lawful_threshold=lawful_threshold
+        
+    def update(self,velocity):
+        vector,length=self.standardize(velocity)
+        if length>=20:
+            for index,mean_vector in enumerate(self.mean_Vector):
+                cosin=(np.dot(mean_vector,vector))/(np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector)))
+                if cosin>self.min_cosin:
+                    self.mean_Vector[index]=np.float16((self.Num[index]*mean_vector+vector)/(self.Num[index]+1))
+                    self.mean_Length[index]=np.float16((self.Num[index]*self.mean_Length[index]+length)/(self.Num[index]+1))
+                    self.Num[index]+=1
+                    if sum(self.Num) >= self.init_num:
+                        self.flag="check"
+                    return
+            self.mean_Vector.append(vector)
+            self.mean_Length.append(length)
+            self.Num.append(1)
+
+    def check_lawful(self,velocity):
+        vector,length=self.standardize(velocity)
+        for index,mean_vector in enumerate(self.mean_Vector):
+            cosin=(np.dot(mean_vector,vector))/(1e-4+np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector)))
+            if cosin>self.min_cosin and self.Num[index]/sum(self.Num) > self.lawful_threshold:
+                return True
+        return False
+        
+    def standardize(self,velocity):
+        x=np.array(velocity,dtype=np.float16)
+        length=np.sqrt(np.dot(x,x))+1e-4
+        x=x/length
+        return x,length
+
+class Vector_Field:
+    def __init__(self,img_H=1080,img_W=1920,box_size=50) -> None:
+        super().__init__()
+        self.img_H=img_H
+        self.img_W=img_W
+        self.box_size=box_size
+        self.vector_memory=[[Vector_Memory() for _ in range(1+img_W//box_size)] for _ in range(1+img_H//box_size)]
+    
+    def update(self,box,velocity):
+        J,I=(int((box[0]+box[2])/2)//self.box_size,int((box[1]+box[3])/2)//self.box_size)
+        if self.vector_memory[I][J].flag=="init":
+            self.vector_memory[I][J].update(velocity)
+            return True
+        else:
+            return self.vector_memory[I][J].check_lawful(velocity)
+        
+    def draw_vector_field(self,img=None):
+        if img is None or img.shape[0]!=self.img_H or img.shape[1]!=self.img_W:
+            img=np.ones((self.img_H,self.img_W,3))
+            
+        for I in range(len(self.vector_memory)):
+            for J in range(len(self.vector_memory[I])):
+                box_center=(J*self.box_size+int(self.box_size/2),I*self.box_size+int(self.box_size/2))
+                if sum(self.vector_memory[I][J].Num) == 0:
+                    cv2.circle(img, box_center, 2, (0,170,170), 2)
+                else:
+                    cv2.circle(img, box_center, 2, (0,240,0), 2)
+                    for index,vector in enumerate(self.vector_memory[I][J].mean_Vector):
+                        if self.vector_memory[I][J].Num[index]/sum(self.vector_memory[I][J].Num) >= self.vector_memory[I][J].lawful_threshold:
+                            pointat=(box_center[0]+int(20*vector[0]),box_center[1]+int(20*vector[1]))
+                            cv2.arrowedLine(img,box_center, pointat, (0,240,0),2,0,0,0.3)
+        return img
+    
 class Object_Counter:
     def __init__(self,name_list) -> None:
         super().__init__()

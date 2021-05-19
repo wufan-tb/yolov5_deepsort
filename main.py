@@ -3,8 +3,8 @@ import numpy as np
 from datetime import datetime
 from multiprocessing import Pool
 
-from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing
-from self_utils.overall_method import merge_video,Area_Restrict,Count_Line,Object_Counter,Image_Capture
+from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing,Field_Processing
+from self_utils.overall_method import merge_video,Area_Restrict,Count_Line,Object_Counter,Image_Capture,Vector_Field
 
 sys.path.append('pytorch_yolov5/')
 from deep_sort.configs.parser import get_config
@@ -37,7 +37,7 @@ def main(yolo5_config):
         print("=> using single process")
         
     # * init deepsort tracker
-    if yolo5_config.task in ['track','count']:
+    if yolo5_config.task in ['track','count','field']:
         cfg = get_config()
         cfg.merge_from_file("deep_sort/configs/deep_sort.yaml")
         deepsort_tracker = DeepSort(cfg.DEEPSORT.REID_CKPT, max_dist=cfg.DEEPSORT.MAX_DIST, 
@@ -51,6 +51,8 @@ def main(yolo5_config):
         theLine=Count_Line([600,50],[600,1700])
         class_list=yolo5_config.classes if yolo5_config.classes is not None else [0,1,2,3]
         Obj_Counter=Object_Counter([class_names[key] for key in class_list])
+    elif yolo5_config.task=='field':
+        Field=Vector_Field()
     else:
         cameArea=Area_Restrict(yolo5_config.area,[mycap.get_height(),mycap.get_width()])
     total_num=mycap.get_length()
@@ -76,6 +78,8 @@ def main(yolo5_config):
                     Denseing_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
                 if yolo5_config.task=='count':
                     Counting_Processing(img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
+                if yolo5_config.task=='field':
+                    Field_Processing(img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
         sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))    
         sys.stdout.flush()
 
@@ -96,9 +100,9 @@ def main(yolo5_config):
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count'], default='detect')
+    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','field'], default='detect')
     
-    parser.add_argument('--input', type=str, default="inference/velocity.mp4", help='test imgs folder or video or camera')
+    parser.add_argument('--input', type=str, default="inference/field.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')
     parser.add_argument('--area', type=str, default=None, help='area restrict path')
     parser.add_argument('--pools',type=int, default=1, help='max pool num')

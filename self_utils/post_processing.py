@@ -112,6 +112,27 @@ def count_post_processing(np_img,pred,class_names,inference_shape,theLine,Tracke
     np_img=Obj_Counter.draw_counter(np_img)
     return np_img
 
+def field_post_processing(np_img,pred,class_names,inference_shape,Field,Tracker,class_colors=None):
+    colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
+    if pred is not None and len(pred):
+        outputs=deepsort_update(Tracker,pred,inference_shape,np_img)
+        if len(outputs) > 0:
+            bbox_xyxy = outputs[:, :4]
+            labels = outputs[:, 4]
+            identities = outputs[:, 5]
+            Vx = outputs[:, 6]
+            Vy = outputs[:, 7]
+            for i in range(len(outputs)):
+                box=bbox_xyxy[i]
+                trackid=identities[i]
+                label=labels[i]
+                velocity=[Vx[i],Vy[i]]
+                text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
+                Field.update(box,velocity)
+                plot_one_box(box, np_img, text_info=text_info,velocity=velocity, color=colors[int(label)])
+    np_img=Field.draw_vector_field(np_img)
+    return np_img
+                
 def draw_obj_dense(img,box_list,k_size=281,beta=1.5):
     value=np.ones((img.shape[0],img.shape[1])).astype('uint8')
     value=value*10
