@@ -78,9 +78,9 @@ def main(yolo5_config):
                     Denseing_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
                 if yolo5_config.task=='count':
                     Counting_Processing(img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
-                if yolo5_config.task=='field':
+                if yolo5_config.task=='vector_field':
                     Field_Processing(img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
-        sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))    
+        sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))
         sys.stdout.flush()
 
     if yolo5_config.pools > 1:
@@ -100,7 +100,7 @@ def main(yolo5_config):
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','field'], default='detect')
+    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','vector_field','trace_mask'], default='detect')
     
     parser.add_argument('--input', type=str, default="inference/field.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')

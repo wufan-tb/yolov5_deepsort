@@ -1,6 +1,25 @@
 import cv2,os,natsort
 import numpy as np
 
+class Trace_Mask:
+    def __init__(self,img_H,img_W,save_path) -> None:
+        super().__init__()
+        self.mask=np.zeros((img_H,img_W))
+        self.save_path=save_path
+        
+    def update_mask(self,box):
+        self.mask[box[1]:box[3],box[0]:box[2]]+=1
+        return
+    
+    def visulize_mask(self,img):
+        
+        return img
+    
+    def save_final_mask(self):
+        cv2.imwrite(self.save_path,self.mask)
+        
+        
+        
 class Vector_Memory:
     def __init__(self,min_cosin=0.8,init_num=50,lawful_threshold=0.2) -> None:
         super().__init__()
