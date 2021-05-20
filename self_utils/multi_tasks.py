@@ -49,12 +49,12 @@ def Counting_Processing(input_img,save_path,yolo5_config,model,class_names,theLi
         return False,e
     
 def Field_Processing(input_img,save_path,yolo5_config,model,class_names,Field,Tracker,class_colors=None):
-    if 1:
+    try:
         tensor_img=img_preprocessing(input_img,yolo5_config.device,yolo5_config.img_size)
         pred=yolov5_prediction(model,tensor_img,yolo5_config.conf_thres, yolo5_config.iou_thres,yolo5_config.classes)
         result_img=field_post_processing(input_img,pred,class_names,tensor_img.shape,Field,Tracker,class_colors)
         cv2.imwrite(save_path,result_img)
         return True,save_path
-    else:#except Exception as e:
+    except Exception as e:
         print("Wrong:",e,save_path)
         return False,e
