@@ -3,12 +3,13 @@ import numpy as np
 from datetime import datetime
 from multiprocessing import Pool
 
-from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing,Field_Processing
+from self_utils.multi_tasks import Detection_Processing,Tracking_Processing,Denseing_Processing,Counting_Processing,Vector_Field_Processing,Background_Modeling
 from self_utils.overall_method import merge_video,Area_Restrict,Count_Line,Object_Counter,Image_Capture,Vector_Field
 
 sys.path.append('pytorch_yolov5/')
 from deep_sort.configs.parser import get_config
 from deep_sort.deep_sort import DeepSort
+
 
 def main(yolo5_config):
     print("=> main task started: {}".format(datetime.now().strftime('%H:%M:%S')))
@@ -53,6 +54,8 @@ def main(yolo5_config):
         Obj_Counter=Object_Counter([class_names[key] for key in class_list])
     elif yolo5_config.task=='field':
         Field=Vector_Field()
+    elif yolo5_config.task=='bg_model':
+        bg_model=cv2.createBackgroundSubtractorMOG2(125, 20, False)
     else:
         cameArea=Area_Restrict(yolo5_config.area,[mycap.get_height(),mycap.get_width()])
     total_num=mycap.get_length()
@@ -70,6 +73,8 @@ def main(yolo5_config):
                 if yolo5_config.task=='empty':
                     cv2.imwrite(save_path,img)
                     time.sleep(1)
+                if yolo5_config.task=='bg_model':
+                    Background_Modeling(img,save_path,bg_model)
                 if yolo5_config.task=='detect':
                     Detection_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
                 if yolo5_config.task=='track':
@@ -79,7 +84,7 @@ def main(yolo5_config):
                 if yolo5_config.task=='count':
                     Counting_Processing(img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
                 if yolo5_config.task=='vector_field':
-                    Field_Processing(img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
+                    Vector_Field_Processing(img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
         sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))
         sys.stdout.flush()
 
@@ -100,7 +105,7 @@ def main(yolo5_config):
 if __name__=="__main__":
     torch.multiprocessing.set_start_method('spawn')
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','vector_field','trace_mask'], default='detect')
+    parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','vector_field','trace_mask','bg_model'], default='detect')
     
     parser.add_argument('--input', type=str, default="inference/field.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')

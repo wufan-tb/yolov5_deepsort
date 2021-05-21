@@ -12,7 +12,8 @@ class Trace_Mask:
         return
     
     def visulize_mask(self,img):
-        
+        mask=np.ones_like(self.mask)
+        mask[self.mask>0]=0
         return img
     
     def save_final_mask(self):
