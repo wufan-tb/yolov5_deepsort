@@ -92,7 +92,7 @@ def main(yolo5_config):
         myP.close()
         myP.join()
     mycap.release()
-    print("\n=> {}张图片，共花费{:.2f}s，成功{}张".format(total_num,time.time()-c,len(os.listdir(yolo5_config.output))))
+    print("\n=> 成功处理{}/{}张图片, 共花费{:.2f}s [{:.2f} fps]".format(len(os.listdir(yolo5_config.output)),total_num,time.time()-c,len(os.listdir(yolo5_config.output))/(time.time()-c)))
     
     # * merge video
     if yolo5_config.video:
