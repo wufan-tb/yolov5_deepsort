@@ -121,6 +121,6 @@ if __name__=="__main__":
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     
     yolo5_config = parser.parse_args()
-    print(yolo5_config.classes)
+    print(yolo5_config)
     main(yolo5_config)
 
