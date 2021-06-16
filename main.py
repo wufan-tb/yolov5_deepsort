@@ -18,6 +18,7 @@ def main(yolo5_config):
     a=time.time()
     Model=torch.load(yolo5_config.weights,map_location=lambda storage, loc: storage.cuda(int(yolo5_config.device)))['model'].float().fuse().eval()
     class_names = Model.module.names if hasattr(Model, 'module') else Model.names
+    print("==> class names: ",class_names)
     class_colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
     b=time.time()
     print("=> load model, cost:{:.2f}s".format(b-a))
