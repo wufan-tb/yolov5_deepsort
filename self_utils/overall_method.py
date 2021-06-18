@@ -22,7 +22,7 @@ class Trace_Mask:
         
         
 class Vector_Memory:
-    def __init__(self,min_cosin=0.8,init_num=50,lawful_threshold=0.2) -> None:
+    def __init__(self,min_cosin=0.8,init_num=15,lawful_threshold=0.2) -> None:
         super().__init__()
         self.mean_Vector=[]
         self.mean_Length=[]
@@ -36,7 +36,7 @@ class Vector_Memory:
         vector,length=self.standardize(velocity)
         if length>=20:
             for index,mean_vector in enumerate(self.mean_Vector):
-                cosin=(np.dot(mean_vector,vector))/(np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector)))
+                cosin=(np.dot(mean_vector,vector))/(np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector))+1e-4)
                 if cosin>self.min_cosin:
                     self.mean_Vector[index]=np.float16((self.Num[index]*mean_vector+vector)/(self.Num[index]+1))
                     self.mean_Length[index]=np.float16((self.Num[index]*self.mean_Length[index]+length)/(self.Num[index]+1))
@@ -50,6 +50,8 @@ class Vector_Memory:
 
     def check_lawful(self,velocity):
         vector,length=self.standardize(velocity)
+        if length <= 20:
+            return True
         for index,mean_vector in enumerate(self.mean_Vector):
             cosin=(np.dot(mean_vector,vector))/(1e-4+np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector)))
             if cosin>self.min_cosin and self.Num[index]/sum(self.Num) > self.lawful_threshold:
@@ -72,11 +74,21 @@ class Vector_Field:
     
     def update(self,box,velocity):
         J,I=(int((box[0]+box[2])/2)//self.box_size,int((box[1]+box[3])/2)//self.box_size)
-        if self.vector_memory[I][J].flag=="init":
-            self.vector_memory[I][J].update(velocity)
-            return True
-        else:
-            return self.vector_memory[I][J].check_lawful(velocity)
+        Box=[]
+        for ii in range(3):
+            for jj in range(3):
+                try:
+                    if self.vector_memory[I-1+ii][J-1+jj].flag=="init":
+                        self.vector_memory[I-1+ii][J-1+jj].update(velocity)
+                        Box.append(1)
+                    else:
+                        if self.vector_memory[I-1+ii][J-1+jj].check_lawful(velocity):
+                            Box.append(1)
+                        else:
+                            Box.append(0)
+                except:
+                    pass
+        return sum(Box) >= 0.6*len(Box)
         
     def draw_vector_field(self,img=None):
         if img is None or img.shape[0]!=self.img_H or img.shape[1]!=self.img_W:

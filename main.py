@@ -39,7 +39,7 @@ def main(yolo5_config):
         print("=> using single process")
         
     # * init deepsort tracker
-    if yolo5_config.task in ['track','count','field']:
+    if yolo5_config.task in ['track','count','vector_field']:
         cfg = get_config()
         cfg.merge_from_file("deep_sort/configs/deep_sort.yaml")
         deepsort_tracker = DeepSort(cfg.DEEPSORT.REID_CKPT, max_dist=cfg.DEEPSORT.MAX_DIST, 
@@ -53,7 +53,7 @@ def main(yolo5_config):
         theLine=Count_Line([600,50],[600,1700])
         class_list=yolo5_config.classes if yolo5_config.classes is not None else [0,1,2,3]
         Obj_Counter=Object_Counter([class_names[key] for key in class_list])
-    elif yolo5_config.task=='field':
+    elif yolo5_config.task=='vector_field':
         Field=Vector_Field()
     elif yolo5_config.task=='bg_model':
         bg_model=cv2.createBackgroundSubtractorMOG2(125, 20, False)

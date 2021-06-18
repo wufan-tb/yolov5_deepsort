@@ -128,8 +128,9 @@ def field_post_processing(np_img,pred,class_names,inference_shape,Field,Tracker,
                 label=labels[i]
                 velocity=[Vx[i],Vy[i]]
                 text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
-                Field.update(box,velocity)
-                plot_one_box(box, np_img, text_info=text_info,velocity=velocity, color=colors[int(label)])
+                flag=Field.update(box,velocity)
+                color=[0,200,0] if flag else [0,0,200]
+                plot_one_box(box, np_img, text_info=text_info,velocity=velocity, color=color)
     np_img=Field.draw_vector_field(np_img)
     return np_img
                 
