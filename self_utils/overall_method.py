@@ -22,7 +22,7 @@ class Trace_Mask:
         
         
 class Vector_Memory:
-    def __init__(self,min_cosin=0.8,init_num=15,lawful_threshold=0.2) -> None:
+    def __init__(self,min_cosin=0.8,init_num=15,max_vector_num=4) -> None:
         super().__init__()
         self.mean_Vector=[]
         self.mean_Length=[]
@@ -30,7 +30,7 @@ class Vector_Memory:
         self.min_cosin=min_cosin
         self.flag="init"
         self.init_num=init_num
-        self.lawful_threshold=lawful_threshold
+        self.max_vector_num=max_vector_num
         
     def update(self,velocity):
         vector,length=self.standardize(velocity)
@@ -44,9 +44,10 @@ class Vector_Memory:
                     if sum(self.Num) >= self.init_num:
                         self.flag="check"
                     return
-            self.mean_Vector.append(vector)
-            self.mean_Length.append(length)
-            self.Num.append(1)
+            if len(self.Num) < self.max_vector_num:
+                self.mean_Vector.append(vector)
+                self.mean_Length.append(length)
+                self.Num.append(1)
 
     def check_lawful(self,velocity):
         vector,length=self.standardize(velocity)
@@ -54,7 +55,7 @@ class Vector_Memory:
             return True
         for index,mean_vector in enumerate(self.mean_Vector):
             cosin=(np.dot(mean_vector,vector))/(1e-4+np.sqrt(np.dot(mean_vector,mean_vector)*np.dot(vector,vector)))
-            if cosin>self.min_cosin and self.Num[index]/sum(self.Num) > self.lawful_threshold:
+            if cosin>self.min_cosin and (self.Num[index]>self.init_num or self.Num[index]/sum(self.Num) > (0.8/len(self.Num))):
                 return True
         return False
         
@@ -82,6 +83,7 @@ class Vector_Field:
                         self.vector_memory[I-1+ii][J-1+jj].update(velocity)
                         Box.append(1)
                     else:
+                        self.vector_memory[I-1+ii][J-1+jj].update(velocity)
                         if self.vector_memory[I-1+ii][J-1+jj].check_lawful(velocity):
                             Box.append(1)
                         else:
@@ -102,7 +104,7 @@ class Vector_Field:
                 else:
                     cv2.circle(img, box_center, 2, (0,240,0), 2)
                     for index,vector in enumerate(self.vector_memory[I][J].mean_Vector):
-                        if self.vector_memory[I][J].Num[index]/sum(self.vector_memory[I][J].Num) >= self.vector_memory[I][J].lawful_threshold:
+                        if (self.vector_memory[I][J].Num[index]>self.vector_memory[I][J].init_num or self.vector_memory[I][J].Num[index]/sum(self.vector_memory[I][J].Num) > (0.8/len(self.vector_memory[I][J].Num))):
                             pointat=(box_center[0]+int(20*vector[0]),box_center[1]+int(20*vector[1]))
                             cv2.arrowedLine(img,box_center, pointat, (0,240,0),2,0,0,0.3)
         return img
