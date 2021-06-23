@@ -66,7 +66,7 @@ def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Track
                 if cameArea.area_restrict and (not cameArea.box_in_area(box)):
                     continue
                 text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
-                plot_one_box(box, np_img, text_info=text_info,velocity=velocity, color=colors[int(label)]) 
+                plot_one_box(box, np_img, text_info=text_info, velocity=velocity, color=colors[int(label)]) 
 
     if cameArea.area_restrict:
         cameArea.draw_bounding(np_img)

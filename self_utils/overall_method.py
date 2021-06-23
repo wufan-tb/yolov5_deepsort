@@ -31,7 +31,7 @@ class Vector_Memory:
         self.flag="init"
         self.init_num=init_num
         self.max_vector_num=max_vector_num
-        
+
     def update(self,velocity):
         vector,length=self.standardize(velocity)
         if length>=20:
@@ -72,7 +72,7 @@ class Vector_Field:
         self.img_W=img_W
         self.box_size=box_size
         self.vector_memory=[[Vector_Memory() for _ in range(1+img_W//box_size)] for _ in range(1+img_H//box_size)]
-    
+
     def update(self,box,velocity):
         J,I=(int((box[0]+box[2])/2)//self.box_size,int((box[1]+box[3])/2)//self.box_size)
         Box=[]
@@ -91,7 +91,7 @@ class Vector_Field:
                 except:
                     pass
         return sum(Box) >= 0.6*len(Box)
-        
+
     def draw_vector_field(self,img=None):
         if img is None or img.shape[0]!=self.img_H or img.shape[1]!=self.img_W:
             img=np.ones((self.img_H,self.img_W,3))

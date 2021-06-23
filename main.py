@@ -45,7 +45,8 @@ def main(yolo5_config):
         deepsort_tracker = DeepSort(cfg.DEEPSORT.REID_CKPT, max_dist=cfg.DEEPSORT.MAX_DIST, 
                             min_confidence=cfg.DEEPSORT.MIN_CONFIDENCE, nms_max_overlap=cfg.DEEPSORT.NMS_MAX_OVERLAP, 
                             max_iou_distance=cfg.DEEPSORT.MAX_IOU_DISTANCE, max_age=cfg.DEEPSORT.MAX_AGE, 
-                            n_init=cfg.DEEPSORT.N_INIT, nn_budget=cfg.DEEPSORT.NN_BUDGET, use_cuda=True)
+                            n_init=cfg.DEEPSORT.N_INIT, nn_budget=cfg.DEEPSORT.NN_BUDGET, 
+                            use_cuda=True,use_appearence=True)
 
     # * load image and process
     mycap=Image_Capture(yolo5_config.input)
@@ -108,7 +109,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, choices=['empty','detect','track','dense','count','vector_field','trace_mask','bg_model'], default='detect')
     
-    parser.add_argument('--input', type=str, default="inference/field.mp4", help='test imgs folder or video or camera')
+    parser.add_argument('--input', type=str, default="inference/short_test.mp4", help='test imgs folder or video or camera')
     parser.add_argument('--output', type=str, default="inference/output", help='folder to save result imgs, can not use input folder')
     parser.add_argument('--area', type=str, default=None, help='area restrict path')
     parser.add_argument('--pools',type=int, default=1, help='max pool num')

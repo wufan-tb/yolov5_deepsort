@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from PIL import Image
 
 from . inference import yolov5_prediction,img_preprocessing
 from . post_processing import detect_post_processing,track_post_processing,dense_post_processing,count_post_processing,field_post_processing
@@ -11,6 +12,8 @@ def Detection_Processing(input_img,save_path,yolo5_config,model,class_names,came
         pred=yolov5_prediction(model,tensor_img,yolo5_config.conf_thres, yolo5_config.iou_thres,yolo5_config.classes)
         result_img=detect_post_processing(input_img,pred,class_names,tensor_img.shape,cameArea,class_colors)
         cv2.imwrite(save_path,result_img)
+        temp=Image.fromarray(result_img)
+        # temp.save(save_path)
         return True,save_path
     except Exception as e:
         print("Wrong:",e,save_path)
