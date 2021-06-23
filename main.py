@@ -36,6 +36,7 @@ def main(yolo5_config):
         myP = Pool(yolo5_config.pools)
         print("=> using process pool")
     else:
+        myP=None
         print("=> using single process")
         
     # * init deepsort tracker
@@ -65,28 +66,27 @@ def main(yolo5_config):
         ret,img,img_name = mycap.read()
         if ret:
             save_path=os.path.join(yolo5_config.output,img_name)
-            if yolo5_config.pools >1:
-                assert yolo5_config.task in ['detect','dense'], "!!! warning! task with track can not use multi process"
-                if yolo5_config.task=='detect':
+            if yolo5_config.task=='detect':
+                if myP is not None:
                     myP.apply_async(Detection_Processing, args=(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors,))
-                if yolo5_config.task=='dense':
-                    myP.apply_async(Denseing_Processing,args=(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors,))
-            else:
-                if yolo5_config.task=='empty':
-                    cv2.imwrite(save_path,img)
-                    time.sleep(1)
-                if yolo5_config.task=='bg_model':
-                    Background_Modeling(img,save_path,bg_model)
-                if yolo5_config.task=='detect':
+                else:
                     Detection_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
-                if yolo5_config.task=='track':
-                    Tracking_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,deepsort_tracker,class_colors)
-                if yolo5_config.task=='dense':
+            elif yolo5_config.task=='dense':
+                if myP is not None:
+                    myP.apply_async(Denseing_Processing,args=(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors,))
+                else:
                     Denseing_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
-                if yolo5_config.task=='count':
-                    Counting_Processing(img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
-                if yolo5_config.task=='vector_field':
-                    Vector_Field_Processing(img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
+            elif yolo5_config.task=='track':
+                Tracking_Processing(myP,img,save_path,yolo5_config,Model,class_names,cameArea,deepsort_tracker,class_colors)
+            elif yolo5_config.task=='count':
+                Counting_Processing(myP,img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
+            elif yolo5_config.task=='vector_field':
+                Vector_Field_Processing(myP,img,save_path,yolo5_config,Model,class_names,Field,deepsort_tracker,class_colors)
+            elif yolo5_config.task=='bg_model':
+                Background_Modeling(myP,img,save_path,bg_model)
+            elif yolo5_config.task=='empty':
+                cv2.imwrite(save_path,img)
+                time.sleep(0.04)
         sys.stdout.write("\r=> processing at %d; total: %d" %(mycap.get_index(), total_num))
         sys.stdout.flush()
 
@@ -94,7 +94,7 @@ def main(yolo5_config):
         myP.close()
         myP.join()
     mycap.release()
-    print("\n=> 成功处理{}/{}张图片, 共花费{:.2f}s [{:.2f} fps]".format(len(os.listdir(yolo5_config.output)),total_num,time.time()-c,len(os.listdir(yolo5_config.output))/(time.time()-c)))
+    print("\n=> process done {}/{} images, total cost: {:.2f}s [{:.2f} fps]".format(len(os.listdir(yolo5_config.output)),total_num,time.time()-c,len(os.listdir(yolo5_config.output))/(time.time()-c)))
     
     # * merge video
     if yolo5_config.video:
