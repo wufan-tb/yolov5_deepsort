@@ -16,11 +16,11 @@ def Detection_Processing(input_img,save_path,yolo5_config,model,class_names,came
         print("Wrong:",e,save_path)
         return False,e
     
-def Tracking_Processing(myP,input_img,save_path,yolo5_config,model,class_names,cameArea,Tracker,class_colors=None):
+def Tracking_Processing(myP,input_img,save_path,yolo5_config,model,class_names,cameArea,Tracker,class_colors=None,flag=0):
     try:
         tensor_img=img_preprocessing(input_img,yolo5_config.device,yolo5_config.img_size)
         pred=yolov5_prediction(model,tensor_img,yolo5_config.conf_thres, yolo5_config.iou_thres,yolo5_config.classes)
-        result_img=track_post_processing(input_img,pred,class_names,tensor_img.shape,cameArea,Tracker,class_colors)
+        result_img=track_post_processing(input_img,pred,class_names,tensor_img.shape,cameArea,Tracker,class_colors,flag)
         if myP is not None:
             myP.apply_async(cv2.imwrite,(save_path,result_img,))
         else:

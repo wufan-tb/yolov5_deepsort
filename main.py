@@ -62,7 +62,14 @@ def main(yolo5_config):
     else:
         cameArea=Area_Restrict(yolo5_config.area,[mycap.get_height(),mycap.get_width()])
     total_num=mycap.get_length()
+    count_num = 0  # lailai add
+    flag = 0   # lailai add
     while mycap.ifcontinue():
+        print("count_num",count_num) # lai
+        count_num = count_num + 1 # lai
+
+        if count_num >= 540:  # lai
+            flag = 1 # lai
         ret,img,img_name = mycap.read()
         if ret:
             save_path=os.path.join(yolo5_config.output,img_name)
@@ -77,7 +84,7 @@ def main(yolo5_config):
                 else:
                     Denseing_Processing(img,save_path,yolo5_config,Model,class_names,cameArea,class_colors)
             elif yolo5_config.task=='track':
-                Tracking_Processing(myP,img,save_path,yolo5_config,Model,class_names,cameArea,deepsort_tracker,class_colors)
+                Tracking_Processing(myP,img,save_path,yolo5_config,Model,class_names,cameArea,deepsort_tracker,class_colors,flag)
             elif yolo5_config.task=='count':
                 Counting_Processing(myP,img,save_path,yolo5_config,Model,class_names,theLine,deepsort_tracker,Obj_Counter,class_colors)
             elif yolo5_config.task=='vector_field':

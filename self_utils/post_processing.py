@@ -48,14 +48,16 @@ def deepsort_update(Tracker,pred,inference_shape,np_img):
     outputs = Tracker.update(xywhs, confss , labels, np_img)
     return outputs
 
-def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Tracker,class_colors=None):
+def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Tracker,class_colors=None,flag=0):
     colors = class_colors if class_colors != None else [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
+    print("被调用")
     if pred is not None and len(pred):
         outputs=deepsort_update(Tracker,pred,inference_shape,np_img)
         if len(outputs) > 0:
             bbox_xyxy = outputs[:, :4]
             labels = outputs[:, 4]
             identities = outputs[:, 5]
+            print("identities", identities)
             Vx = outputs[:, 6]
             Vy = outputs[:, 7]
             for i in range(len(outputs)):
@@ -66,7 +68,22 @@ def track_post_processing(np_img,pred,class_names,inference_shape,cameArea,Track
                 if cameArea.area_restrict and (not cameArea.box_in_area(box)):
                     continue
                 text_info = '%s,ID:%d' % (class_names[int(label)],int(trackid))
-                plot_one_box(box, np_img, text_info=text_info, velocity=velocity, color=colors[int(label)]) 
+               # if int(trackid)!=7:
+                print("int(trackid)",int(trackid))
+                print("int(label)",int(label))
+            
+                if int(trackid)==7 and flag ==1:
+                    # 获得视频时间，改动
+                    
+                    # 当17s的时候框变成红色的
+                    plot_one_box(box, np_img, text_info=text_info, velocity=velocity, color=[0,0,200])
+
+                elif int(trackid)==3:
+                    pass
+                else:
+                    plot_one_box(box, np_img, text_info=text_info, velocity=velocity, color=[0,200,0])
+            
+
 
     if cameArea.area_restrict:
         cameArea.draw_bounding(np_img)
