@@ -310,13 +310,15 @@ def merge_video(img_path):
             video.write(img)        
     video.release()
 
-    if os.path.exists(img_path + ".mp4"):
-        sys_cmd="rm -rf {}".format(img_path + ".mp4")
-        child = subprocess.Popen(sys_cmd,shell=False)
+    output=img_path + ".mp4"
+    if os.path.exists(output):
+        sys_cmd="rm -rf {}".format(output)
+        child = subprocess.Popen(sys_cmd,shell=True)
         child.wait()
-    sys_cmd="ffmpeg -i {} -b:v 1000k {}".format(file_path,img_path + ".mp4")
-    child = subprocess.Popen(sys_cmd,shell=False)
+    sys_cmd="ffmpeg -i {} -b:v 1000k {}".format(file_path,output)
+    child = subprocess.Popen(sys_cmd,shell=True)
     child.wait()
     sys_cmd="rm -rf {}".format(file_path)
-    child = subprocess.Popen(sys_cmd,shell=False)
+    child = subprocess.Popen(sys_cmd,shell=True)
     child.wait()
+
