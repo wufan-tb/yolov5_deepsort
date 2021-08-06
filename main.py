@@ -18,6 +18,7 @@ def main(yolo5_config):
     a=time.time()
     Model=torch.load(yolo5_config.weights,map_location=lambda storage, loc: storage.cuda(int(yolo5_config.device)))['model'].float().fuse().eval()
     class_names = Model.module.names if hasattr(Model, 'module') else Model.names
+    print("=> class names: ",class_names)
     class_colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(class_names))]
     b=time.time()
     print("=> load model, cost:{:.2f}s".format(b-a))
@@ -49,7 +50,7 @@ def main(yolo5_config):
     # * load image and process
     mycap=Image_Capture(yolo5_config.input)
     if yolo5_config.task=='count':
-        theLine=Count_Line([600,50],[600,1700])
+        theLine=Count_Line([220,240],[220,640])
         class_list=yolo5_config.classes if yolo5_config.classes is not None else [0,1,2,3]
         Obj_Counter=Object_Counter([class_names[key] for key in class_list])
     elif yolo5_config.task=='field':

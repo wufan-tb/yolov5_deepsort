@@ -1,4 +1,4 @@
-import cv2,os,natsort
+import cv2,os,natsort,sys,subprocess
 import numpy as np
 
 class Trace_Mask:
@@ -295,3 +295,15 @@ def merge_video(img_path):
             img = cv2.imread(item)
             video.write(img)        
     video.release()
+
+    output=img_path + ".mp4"
+    if os.path.exists(output):
+            sys_cmd="rm -rf {}".format(output)
+            child = subprocess.Popen(sys_cmd,shell=True)
+            child.wait()
+    sys_cmd="ffmpeg -i {} -b:v 1000k {}".format(file_path,output)
+    child = subprocess.Popen(sys_cmd,shell=True)
+    child.wait()
+    sys_cmd="rm -rf {}".format(file_path)
+    child = subprocess.Popen(sys_cmd,shell=True)
+    child.wait()
