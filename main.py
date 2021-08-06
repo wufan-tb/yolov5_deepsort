@@ -52,7 +52,7 @@ def main(yolo5_config):
     # * load image and process
     mycap=Image_Capture(yolo5_config.input)
     if yolo5_config.task=='count':
-        theLine=Count_Line([600,50],[600,1700])
+        theLine=Count_Line([220,240],[220,640])
         class_list=yolo5_config.classes if yolo5_config.classes is not None else [0,1,2,3]
         Obj_Counter=Object_Counter([class_names[key] for key in class_list])
     elif yolo5_config.task=='vector_field':
